@@ -72,6 +72,11 @@ class OCI8Statement implements \IteratorAggregate, Statement
     protected $_paramMap = array();
 
     /**
+     * @var array
+     */
+    private $bindings = array();
+
+    /**
      * Creates a new OCI8Statement that uses the given connection handle and SQL statement.
      *
      * @param resource                                  $dbh       The connection handle.
@@ -134,7 +139,14 @@ class OCI8Statement implements \IteratorAggregate, Statement
      */
     public function bindValue($param, $value, $type = null)
     {
-        return $this->bindParam($param, $value, $type, null);
+        if ($type == \PDO::PARAM_LOB) {
+            $this->bindings[$param] = oci_new_descriptor($this->_dbh, OCI_D_LOB);
+            $this->bindings[$param]->writeTemporary($value, OCI_TEMP_BLOB);
+        } else {
+            $this->bindings[$param] = $value;
+        }
+
+        return $this->bindParam($param, $this->bindings[$param], $type, null);
     }
 
     /**
@@ -145,10 +157,7 @@ class OCI8Statement implements \IteratorAggregate, Statement
         $column = isset($this->_paramMap[$column]) ? $this->_paramMap[$column] : $column;
 
         if ($type == \PDO::PARAM_LOB) {
-            $lob = oci_new_descriptor($this->_dbh, OCI_D_LOB);
-            $lob->writeTemporary($variable, OCI_TEMP_BLOB);
-
-            return oci_bind_by_name($this->_sth, $column, $lob, -1, OCI_B_BLOB);
+            return oci_bind_by_name($this->_sth, $column, $variable, -1, OCI_B_BLOB);
         } elseif ($length !== null) {
             return oci_bind_by_name($this->_sth, $column, $variable, $length);
         }
@@ -322,3 +331,4 @@ class OCI8Statement implements \IteratorAggregate, Statement
         return oci_num_rows($this->_sth);
     }
 }
+
