@@ -51,4 +51,8 @@ class TextType extends Type
     {
         return Type::TEXT;
     }
+    //
+    // public function getBindingType() {
+    //     return \PDO::PARAM_LOB; 
+    // }
 }
