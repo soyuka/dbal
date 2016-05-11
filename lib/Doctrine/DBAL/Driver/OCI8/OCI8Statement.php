@@ -140,11 +140,12 @@ class OCI8Statement implements \IteratorAggregate, Statement
     public function bindValue($param, $value, $type = null)
     {
         if ($type == \PDO::PARAM_LOB) {
-            $this->bindings[$param] = oci_new_descriptor($this->_dbh, OCI_D_LOB);
-            $this->bindings[$param]->writeTemporary($value, OCI_TEMP_BLOB);
-        } else {
-            $this->bindings[$param] = $value;
+            $descriptor = oci_new_descriptor($this->_dbh, OCI_D_LOB);
+            $descriptor->writeTemporary($value, OCI_TEMP_BLOB);
+            $value = $descriptor;
         }
+
+        $this->bindings[$param] = $value;
 
         return $this->bindParam($param, $this->bindings[$param], $type, null);
     }
