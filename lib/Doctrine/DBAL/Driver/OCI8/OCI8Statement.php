@@ -139,13 +139,13 @@ class OCI8Statement implements \IteratorAggregate, Statement
      */
     public function bindValue($param, $value, $type = null)
     {
-        if ($type == \PDO::PARAM_LOB) {
+        if ($type === \PDO::PARAM_LOB || -99 === $type) {
             $descriptor = oci_new_descriptor($this->_dbh, OCI_D_LOB);
-            $descriptor->writeTemporary($value, OCI_TEMP_BLOB);
-            $value = $descriptor;
+            $descriptor->writeTemporary($value, $type === -99 ? OCI_TEMP_CLOB : OCI_TEMP_BLOB);
+            $this->bindings[$param] = $descriptor;
+        } else {
+            $this->bindings[$param] = $value;
         }
-
-        $this->bindings[$param] = $value;
 
         return $this->bindParam($param, $this->bindings[$param], $type, null);
     }
@@ -157,9 +157,9 @@ class OCI8Statement implements \IteratorAggregate, Statement
     {
         $column = isset($this->_paramMap[$column]) ? $this->_paramMap[$column] : $column;
 
-        if ($type == \PDO::PARAM_LOB) {
-            return oci_bind_by_name($this->_sth, $column, $variable, -1, OCI_B_BLOB);
-        } elseif ($length !== null) {
+        if(is_a($variable, 'Oci-Lob')) {
+            return oci_bind_by_name($this->_sth, $column, $variable, -1, $type === -99 ? OCI_B_CLOB : OCI_B_BLOB);
+        } else if ($length !== null) {
             return oci_bind_by_name($this->_sth, $column, $variable, $length);
         }
 

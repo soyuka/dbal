@@ -23,10 +23,10 @@ class DBAL2386Test extends \Doctrine\Tests\DbalFunctionalTestCase
             $table = new \Doctrine\DBAL\Schema\Table('DBAL2386');
             $table->addColumn('id', 'integer');
             $table->setPrimaryKey(array('id'));
-            $table->addColumn('title', 'string');
-            $table->addColumn('address', 'text');
-            $table->addColumn('geo', 'json_array');
-            $table->addColumn('name', 'string');
+            $table->addColumn('title', 'string', ['notnull' => false]);
+            $table->addColumn('address', 'text', ['notnull' => false]);
+            $table->addColumn('geo', 'json_array', ['notnull' => false]);
+            $table->addColumn('name', 'string', ['notnull' => false]);
 
             $this->_conn->getSchemaManager()->createTable($table);
         }
@@ -46,7 +46,14 @@ class DBAL2386Test extends \Doctrine\Tests\DbalFunctionalTestCase
         $platform = $this->_conn->getDatabasePlatform();
 
         foreach($types as $column => $type) {
-            $stmt->bindValue($column, $type->convertToDatabaseValue($values[$column] ?? null, $platform), $type->getBindingType());
+            $t = $type->getBindingType();
+
+            if(in_array($column, ['address', 'geo'])) {
+                $t = -99; 
+            }
+
+            $value = $type->convertToDatabaseValue(isset($values[$column]) ? $values[$column] : null, $platform);
+            $stmt->bindValue(':' . $column, $value, $t);
         }
 
         $this->_conn->beginTransaction();
@@ -57,7 +64,15 @@ class DBAL2386Test extends \Doctrine\Tests\DbalFunctionalTestCase
             $column = strtolower($column);
             $type = $types[$column];
             
-            $this->assertEquals($values[$column], $type->convertToPHPValue($value, $platform));
+            if($type === Type::getType('json_array')) {
+                $default = []; 
+            } else {
+                $default = null; 
+            }
+
+            $assert = isset($values[$column]) ? $values[$column] : $default;
+
+            $this->assertEquals($assert, $type->convertToPHPValue($value, $platform));
         }
     }
 
