@@ -45,10 +45,10 @@ class DBAL2386Test extends \Doctrine\Tests\DbalFunctionalTestCase
 
         $platform = $this->_conn->getDatabasePlatform();
 
-        foreach($types as $column => $type) {
+        foreach ($types as $column => $type) {
             $t = $type->getBindingType();
 
-            if(in_array($column, ['address', 'geo'])) {
+            if (in_array($column, ['address', 'geo'])) {
                 $t = -99; 
             }
 
@@ -60,11 +60,11 @@ class DBAL2386Test extends \Doctrine\Tests\DbalFunctionalTestCase
         $stmt->execute();
         $this->_conn->commit();
         
-        foreach($this->_conn->query('SELECT * FROM DBAL2386')->fetch() as $column => $value) {
+        foreach ($this->_conn->query('SELECT * FROM DBAL2386')->fetch() as $column => $value) {
             $column = strtolower($column);
             $type = $types[$column];
             
-            if($type === Type::getType('json_array')) {
+            if ($type === Type::getType('json_array')) {
                 $default = []; 
             } else {
                 $default = null; 

@@ -157,7 +157,7 @@ class OCI8Statement implements \IteratorAggregate, Statement
     {
         $column = isset($this->_paramMap[$column]) ? $this->_paramMap[$column] : $column;
 
-        if(is_a($variable, 'Oci-Lob')) {
+        if (is_a($variable, 'Oci-Lob')) {
             return oci_bind_by_name($this->_sth, $column, $variable, -1, $type === -99 ? OCI_B_CLOB : OCI_B_BLOB);
         } else if ($length !== null) {
             return oci_bind_by_name($this->_sth, $column, $variable, $length);

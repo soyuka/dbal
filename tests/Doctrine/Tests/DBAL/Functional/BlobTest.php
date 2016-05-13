@@ -99,16 +99,4 @@ class BlobTest extends \Doctrine\Tests\DbalFunctionalTestCase
         $this->assertInternalType('resource', $blobValue);
         $this->assertEquals($text, stream_get_contents($blobValue));
     }
-
-    private function assertClobContains($text)
-    {
-        $rows = $this->_conn->fetchAll('SELECT * FROM blob_table');
-
-        $this->assertEquals(1, count($rows));
-        $row = array_change_key_case($rows[0], CASE_LOWER);
-
-        $blobValue = Type::getType('text')->convertToPHPValue($row['clobfield'], $this->_conn->getDatabasePlatform());
-
-        $this->assertEquals($text, $blobValue);
-    }
 }
