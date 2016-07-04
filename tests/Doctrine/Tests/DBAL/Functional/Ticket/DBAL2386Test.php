@@ -34,7 +34,7 @@ class DBAL2386Test extends \Doctrine\Tests\DbalFunctionalTestCase
 
     private function insertLobs(array $values) {
         $stmt = $this->_conn->prepare('INSERT INTO DBAL2386 VALUES (:id, :title, :address, :geo, :name)');
-        
+
         $types = [
             'id' => Type::getType('integer'),
             'title' => Type::getType('string'),
@@ -48,10 +48,6 @@ class DBAL2386Test extends \Doctrine\Tests\DbalFunctionalTestCase
         foreach ($types as $column => $type) {
             $t = $type->getBindingType();
 
-            if (in_array($column, ['address', 'geo'])) {
-                $t = -99; 
-            }
-
             $value = $type->convertToDatabaseValue(isset($values[$column]) ? $values[$column] : null, $platform);
             $stmt->bindValue(':' . $column, $value, $t);
         }
@@ -59,15 +55,15 @@ class DBAL2386Test extends \Doctrine\Tests\DbalFunctionalTestCase
         $this->_conn->beginTransaction();
         $stmt->execute();
         $this->_conn->commit();
-        
+
         foreach ($this->_conn->query('SELECT * FROM DBAL2386')->fetch() as $column => $value) {
             $column = strtolower($column);
             $type = $types[$column];
-            
+
             if ($type === Type::getType('json_array')) {
-                $default = []; 
+                $default = [];
             } else {
-                $default = null; 
+                $default = null;
             }
 
             $assert = isset($values[$column]) ? $values[$column] : $default;

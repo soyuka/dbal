@@ -19,6 +19,7 @@
 
 namespace Doctrine\DBAL\Types;
 
+use Doctrine\DBAL\Driver\OCI8\OCI8Descriptor;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 
 /**
@@ -34,6 +35,19 @@ class BlobType extends Type
     public function getSQLDeclaration(array $fieldDeclaration, AbstractPlatform $platform)
     {
         return $platform->getBlobTypeDeclarationSQL($fieldDeclaration);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function convertToDatabaseValue($value, AbstractPlatform $platform)
+    {
+        if ($platform->getName() == 'oracle') {
+            $descriptor = new OCI8Descriptor($value, OCI_TEMP_BLOB);
+            return $descriptor;
+        }
+
+        return $value;
     }
 
     /**

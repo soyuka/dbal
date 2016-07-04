@@ -19,6 +19,7 @@
 
 namespace Doctrine\DBAL\Types;
 
+use Doctrine\DBAL\Driver\OCI8\OCI8Descriptor;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 
 /**
@@ -39,6 +40,19 @@ class TextType extends Type
     /**
      * {@inheritdoc}
      */
+    public function convertToDatabaseValue($value, AbstractPlatform $platform)
+    {
+        if ($platform->getName() == 'oracle') {
+            $descriptor = new OCI8Descriptor($value, OCI_TEMP_CLOB);
+            return $descriptor;
+        }
+
+        return $value;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function convertToPHPValue($value, AbstractPlatform $platform)
     {
         return (is_resource($value)) ? stream_get_contents($value) : $value;
@@ -51,8 +65,4 @@ class TextType extends Type
     {
         return Type::TEXT;
     }
-    //
-    // public function getBindingType() {
-    //     return \PDO::PARAM_LOB; 
-    // }
 }

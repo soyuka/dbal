@@ -32,6 +32,7 @@ use Doctrine\DBAL\Cache\QueryCacheProfile;
 use Doctrine\DBAL\Cache\ArrayStatement;
 use Doctrine\DBAL\Cache\CacheException;
 use Doctrine\DBAL\Driver\PingableConnection;
+use Doctrine\DBAL\Driver\OCI8\OCI8Descriptor;
 use Throwable;
 
 /**
@@ -1498,6 +1499,10 @@ class Connection implements DriverConnection
             $value = $type->convertToDatabaseValue($value, $this->getDatabasePlatform());
             $bindingType = $type->getBindingType();
         } else {
+            if ($this->getDatabasePlatform()->getName() == 'oracle' && $type === \PDO::PARAM_LOB) {
+                $value = new OCI8Descriptor($value, OCI_TEMP_BLOB);
+            }
+
             $bindingType = $type; // PDO::PARAM_* constants
         }
 

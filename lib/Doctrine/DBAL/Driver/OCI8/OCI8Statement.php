@@ -22,6 +22,7 @@ namespace Doctrine\DBAL\Driver\OCI8;
 use PDO;
 use IteratorAggregate;
 use Doctrine\DBAL\Driver\Statement;
+use Doctrine\DBAL\Driver\OCI8\OCI8Descriptor;
 
 /**
  * The OCI8 implementation of the Statement interface.
@@ -72,7 +73,8 @@ class OCI8Statement implements \IteratorAggregate, Statement
     protected $_paramMap = array();
 
     /**
-     * @var array
+     * @var array Stores binding parameters to keep references to the to-be-bounded data
+     * @see bindValue
      */
     private $bindings = array();
 
@@ -139,10 +141,9 @@ class OCI8Statement implements \IteratorAggregate, Statement
      */
     public function bindValue($param, $value, $type = null)
     {
-        if ($type === \PDO::PARAM_LOB || -99 === $type) {
-            $descriptor = oci_new_descriptor($this->_dbh, OCI_D_LOB);
-            $descriptor->writeTemporary($value, $type === -99 ? OCI_TEMP_CLOB : OCI_TEMP_BLOB);
-            $this->bindings[$param] = $descriptor;
+        if ($value instanceof OCI8Descriptor) {
+            $this->bindings[$param] = $value->getDescriptor($this->_dbh);
+            $type = $value->getBindingType();
         } else {
             $this->bindings[$param] = $value;
         }
@@ -158,7 +159,7 @@ class OCI8Statement implements \IteratorAggregate, Statement
         $column = isset($this->_paramMap[$column]) ? $this->_paramMap[$column] : $column;
 
         if (is_a($variable, 'Oci-Lob')) {
-            return oci_bind_by_name($this->_sth, $column, $variable, -1, $type === -99 ? OCI_B_CLOB : OCI_B_BLOB);
+            return oci_bind_by_name($this->_sth, $column, $variable, -1, $type);
         } else if ($length !== null) {
             return oci_bind_by_name($this->_sth, $column, $variable, $length);
         }

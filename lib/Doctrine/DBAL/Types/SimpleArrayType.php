@@ -19,6 +19,7 @@
 
 namespace Doctrine\DBAL\Types;
 
+use Doctrine\DBAL\Driver\OCI8\OCI8Descriptor;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 
 /**
@@ -45,10 +46,17 @@ class SimpleArrayType extends Type
     public function convertToDatabaseValue($value, AbstractPlatform $platform)
     {
         if (!$value) {
-            return null;
+            $value = null;
+        } else {
+            $value = implode(',', $value);
         }
 
-        return implode(',', $value);
+        if ($platform->getName() == 'oracle') {
+            $descriptor = new OCI8Descriptor($value, OCI_TEMP_CLOB);
+            return $descriptor;
+        }
+
+        return $value;
     }
 
     /**

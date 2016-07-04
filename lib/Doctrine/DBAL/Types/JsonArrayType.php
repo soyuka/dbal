@@ -19,17 +19,44 @@
 
 namespace Doctrine\DBAL\Types;
 
+use Doctrine\DBAL\Driver\OCI8\OCI8Descriptor;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 
 /**
  * Array Type which can be used to generate json arrays.
  *
  * @since  2.3
- * @deprecated Use JsonType instead
  * @author Johannes M. Schmitt <schmittjoh@gmail.com>
  */
-class JsonArrayType extends JsonType
+class JsonArrayType extends Type
 {
+    /**
+     * {@inheritdoc}
+     */
+    public function getSQLDeclaration(array $fieldDeclaration, AbstractPlatform $platform)
+    {
+        return $platform->getJsonTypeDeclarationSQL($fieldDeclaration);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function convertToDatabaseValue($value, AbstractPlatform $platform)
+    {
+        if (null === $value) {
+            $value = null;
+        } else {
+            $value = json_encode($value);
+        }
+
+        if ($platform->getName() == 'oracle') {
+            $descriptor = new OCI8Descriptor($value, OCI_TEMP_CLOB);
+            return $descriptor;
+        }
+
+        return $value;
+    }
+
     /**
      * {@inheritdoc}
      */

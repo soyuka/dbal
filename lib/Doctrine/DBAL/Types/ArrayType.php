@@ -19,6 +19,7 @@
 
 namespace Doctrine\DBAL\Types;
 
+use Doctrine\DBAL\Driver\OCI8\OCI8Descriptor;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 
 /**
@@ -42,7 +43,14 @@ class ArrayType extends Type
     public function convertToDatabaseValue($value, AbstractPlatform $platform)
     {
         // @todo 3.0 - $value === null check to save real NULL in database
-        return serialize($value);
+        $value = serialize($value);
+
+        if ($platform->getName() == 'oracle') {
+            $descriptor = new OCI8Descriptor($value, OCI_TEMP_CLOB);
+            return $descriptor;
+        }
+
+        return $value;
     }
 
     /**
